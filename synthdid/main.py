@@ -133,7 +133,8 @@ class SynthDID(Optimize):
 
 
 if __name__ == "__main__":
-    df = fetch_sampledata()
+    from sample_data import fetch_CaliforniaSmoking
+    df = fetch_CaliforniaSmoking()
 
     PRE_TEREM = [1970, 1979]
     POST_TEREM = [1980, 1988]

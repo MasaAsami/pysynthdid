@@ -8,5 +8,6 @@ This module is still under development. Please check the logic carefully before 
 
 I will register this module in pypi as soon as I have the following requirements.
 - Completion of the TEST code
+- Calculation of SE code(Bootstrap Variance Estimation, Jackknife Variance Estimation)
 - Enhanced visualization code
 - Calculation of tau

@@ -50,7 +50,7 @@ class SynthDID(Optimize):
         self.n_treat = len(self.treatment)
         self.n_post_term = len(self.Y_post_t)
 
-    def fit(self, model="all", zeta_type="base"):
+    def fit(self, model="all", zeta_type="base", force_zeta=None):
 
         self.base_zeta = self.est_zeta()
 
@@ -66,6 +66,9 @@ class SynthDID(Optimize):
         else:
             print(f"your choice :{zeta_type} is not supported.")
             self.zeta = self.base_zeta
+        
+        if force_zeta != None:
+            self.zeta = force_zeta
 
         self.hat_omega = self.est_omega(
             self.Y_pre_c, self.Y_pre_t, np.round(self.zeta, 10)

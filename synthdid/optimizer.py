@@ -20,7 +20,7 @@ class Optimize(object):
         _X["intersept"] = 1
         return np.sum((y - _X.dot(W)) ** 2) + nrow * zeta ** 2 * np.sum(W ** 2)
 
-    def mse_loss(self, W, X, y, intersept=True) -> float:
+    def rmse_loss(self, W, X, y, intersept=True) -> float:
         if type(y) == pd.core.frame.DataFrame:
             y = y.mean(axis=1)
         _X = X.copy()
@@ -83,7 +83,7 @@ class Optimize(object):
         w_bnds = tuple((0, 1) for i in range(n_features))
 
         caled_w = fmin_slsqp(
-            partial(self.mse_loss, X=self.Y_pre_c, y=Y_pre_t, intersept=False),
+            partial(self.rmse_loss, X=self.Y_pre_c, y=Y_pre_t, intersept=False),
             _w,
             f_eqcons=lambda x: np.sum(x) - 1,
             bounds=w_bnds,
@@ -140,7 +140,7 @@ class Optimize(object):
             nf_result.append(np.sum(np.round(np.abs(train_w), 3) > 0) - 1)
 
             loss_result.append(
-                self.mse_loss(
+                self.rmse_loss(
                     train_w,
                     self.Y_pre_c.iloc[test_index],
                     self.Y_pre_t.iloc[test_index],

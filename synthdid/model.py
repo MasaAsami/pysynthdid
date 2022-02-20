@@ -151,21 +151,26 @@ class SynthDID(Optimize):
         else:
             return None
 
-    def delta_plot(self, model="all"):
+    def delta_plot(self, model="all", post_only=False):
         result = pd.DataFrame({"actual_y": self.target_y()})
 
         result["did"] = self.did_potentical_outcome()
         result["sc"] = self.sc_potentical_outcome()
         result["sdid"] = self.sdid_potentical_outcome()
 
-        fig, ax = plt.subplots()
-        fig.set_figwidth(15)
-        result["actual_y"].plot(ax=ax, color="black", linewidth=1, label="actual_y")
-        result["did"].plot(ax=ax, linewidth=1, label="Difference in Differences")
-        result["sc"].plot(ax=ax, label="Synthetic Control")
-        result["sdid"].plot(ax=ax, label="Synthetic Differences in Differences")
+        if post_only:
+            result = result.loc[self.post_term[0] : self.post_term[1]]
 
-        ax.axvspan(self.post_term[0], self.post_term[1], alpha=0.3, color="lightblue")
+        fig, ax = plt.subplots()
+        fig.set_figwidth(10)
+        result["actual_y"].plot(ax=ax, color="black", linewidth=1, label="actual_y")
+        result["did"].plot(ax=ax, linewidth=1, linestyle="dashed", label="Difference in Differences (mean)")
+        result["sc"].plot(ax=ax, linewidth=1, label="Synthetic Control")
+        result["sdid"].plot(ax=ax,label="Synthetic Difference in Differences")
+
+        if not post_only:
+            ax.axvspan(self.post_term[0], self.post_term[1], alpha=0.3, color="lightblue")
+
         plt.title("")
         plt.legend()
         plt.show()

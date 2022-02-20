@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 
 from synthdid.optimizer import Optimize
 
+
 class SynthDID(Optimize):
     """
     hogehoge
@@ -66,7 +67,9 @@ class SynthDID(Optimize):
             print(f"your choice :{zeta_type} is not supported.")
             self.zeta = self.base_zeta
 
-        self.hat_omega = self.est_omega(self.Y_pre_c, self.Y_pre_t, np.round(self.zeta,10))
+        self.hat_omega = self.est_omega(
+            self.Y_pre_c, self.Y_pre_t, np.round(self.zeta, 10)
+        )
         self.hat_omega_ADH = self.est_omega_ADH()
         self.hat_lambda = self.est_lambda()
 
@@ -117,26 +120,40 @@ class SynthDID(Optimize):
         return self.df.loc[self.pre_term[0] : self.post_term[1], self.treatment].mean(
             axis=1
         )
-    
+
     def estimated_params(self, model="sdid"):
-        if model=="sdid":
+        if model == "sdid":
             Y_pre_c_intercept = self.Y_pre_c.copy()
             Y_post_c_intercept = self.Y_post_c.copy()
             Y_pre_c_intercept["intercept"] = 1
             Y_post_c_intercept["intercept"] = 1
             return (
-                pd.DataFrame({"features":Y_pre_c_intercept.columns, "sdid_weight":np.round(self.hat_omega,3) }) ,
-                pd.DataFrame({"time":Y_pre_c_intercept.index, "sdid_weight":np.round(self.hat_lambda,3) }) 
+                pd.DataFrame(
+                    {
+                        "features": Y_pre_c_intercept.columns,
+                        "sdid_weight": np.round(self.hat_omega, 3),
+                    }
+                ),
+                pd.DataFrame(
+                    {
+                        "time": Y_pre_c_intercept.index,
+                        "sdid_weight": np.round(self.hat_lambda, 3),
+                    }
+                ),
             )
-        elif model=="sc":
-            return pd.DataFrame({"features":self.Y_pre_c.columns, "sc_weight":np.round(self.hat_omega_ADH,3) }) 
+        elif model == "sc":
+            return pd.DataFrame(
+                {
+                    "features": self.Y_pre_c.columns,
+                    "sc_weight": np.round(self.hat_omega_ADH, 3),
+                }
+            )
         else:
             return None
 
-
     def delta_plot(self, model="all"):
         result = pd.DataFrame({"actual_y": self.target_y()})
-        
+
         result["did"] = self.did_potentical_outcome()
         result["sc"] = self.sc_potentical_outcome()
         result["sdid"] = self.sdid_potentical_outcome()
@@ -156,6 +173,7 @@ class SynthDID(Optimize):
 
 if __name__ == "__main__":
     from sample_data import fetch_CaliforniaSmoking
+
     df = fetch_CaliforniaSmoking()
 
     PRE_TEREM = [1970, 1979]
@@ -165,18 +183,11 @@ if __name__ == "__main__":
     sdid = SynthDID(df, PRE_TEREM, POST_TEREM, TREATMENT)
     sdid.base_zeta
     sdid.fit(zeta_type="base")
-    sdid.base_zeta
-    sdid.zeta
+    print(sdid.base_zeta)
+    print(sdid.zeta)
     sdid.fit(zeta_type="grid_search")
-    sdid.zeta
+    print(sdid.zeta)
     sdid.fit(zeta_type="bayesian_opt")
-    sdid.base_zeta
-    sdid.did_potentical_outcome()
-    sdid.sdid_potentical_outcome()
-    sdid.sc_potentical_outcome()
+    print(sdid.zeta)
+
     sdid.did_plot()
-    sdid.zeta
-    sdid.hat_omega
-    sdid.hat_omega_ADH
-    sdid.control
-    sdid.Y_pre_c

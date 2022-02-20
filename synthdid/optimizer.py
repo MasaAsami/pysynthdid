@@ -5,6 +5,7 @@ from sklearn.preprocessing import StandardScaler
 from scipy.optimize import fmin_slsqp
 from toolz import reduce, partial
 from sklearn.model_selection import KFold
+from sklearn.linear_model import ElasticNetCV, LassoCV, RidgeCV
 from bayes_opt import BayesianOptimization
 
 
@@ -201,3 +202,49 @@ class Optimize(object):
         optimizer.max["params"]["zeta"]
 
         return (optimizer.max["params"]["zeta"], optimizer.max["target"] * -1)
+    
+    def est_omega_ElasticNet(self, Y_pre_c, Y_pre_t):
+        Y_pre_t = Y_pre_t.copy()
+
+        if type(Y_pre_t) == pd.core.frame.DataFrame:
+            Y_pre_t = Y_pre_t.mean(axis=1)
+            # Y_pre_t.columns = "treatment_group"
+        
+        regr = ElasticNetCV(cv=5, random_state=0)
+        regr.fit(Y_pre_c, Y_pre_t)
+
+        self.elastic_net_alpha = regr.alpha_
+        
+        caled_w = regr.coef_
+
+        return np.append(caled_w, regr.intercept_)
+
+    def est_omega_Lasso(self, Y_pre_c, Y_pre_t):
+        Y_pre_t = Y_pre_t.copy()
+
+        if type(Y_pre_t) == pd.core.frame.DataFrame:
+            Y_pre_t = Y_pre_t.mean(axis=1)
+        
+        regr = LassoCV(cv=5, random_state=0)
+        regr.fit(Y_pre_c, Y_pre_t)
+
+        self.lasso_alpha = regr.alpha_
+        
+        caled_w = regr.coef_
+        
+        return np.append(caled_w, regr.intercept_)
+    
+    def est_omega_Ridge(self, Y_pre_c, Y_pre_t):
+        Y_pre_t = Y_pre_t.copy()
+
+        if type(Y_pre_t) == pd.core.frame.DataFrame:
+            Y_pre_t = Y_pre_t.mean(axis=1)
+        
+        regr = RidgeCV(cv=5)
+        regr.fit(Y_pre_c, Y_pre_t)
+
+        self.ridge_alpha = regr.alpha_
+        
+        caled_w = regr.coef_
+        
+        return np.append(caled_w, regr.intercept_)

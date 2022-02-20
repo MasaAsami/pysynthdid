@@ -36,6 +36,9 @@ class SynthDID(Optimize):
         self.hat_omega_ADH = None
         self.hat_omega = None
         self.hat_lambda = None
+        self.hat_omega_ElasticNet = None
+        self.hat_omega_Lasso = None
+        self.hat_omega_Ridge = None
 
     def _divide_data(self):
 
@@ -50,7 +53,7 @@ class SynthDID(Optimize):
         self.n_treat = len(self.treatment)
         self.n_post_term = len(self.Y_post_t)
 
-    def fit(self, model="all", zeta_type="base", force_zeta=None):
+    def fit(self, model="all", zeta_type="base", force_zeta=None, sparce_estimation=False):
 
         self.base_zeta = self.est_zeta()
 
@@ -75,6 +78,12 @@ class SynthDID(Optimize):
         )
         self.hat_omega_ADH = self.est_omega_ADH()
         self.hat_lambda = self.est_lambda()
+
+        if sparce_estimation:
+            self.hat_omega_ElasticNet = self.est_omega_ElasticNet(self.Y_pre_c, self.Y_pre_t)
+            self.hat_omega_Lasso = self.est_omega_Lasso(self.Y_pre_c, self.Y_pre_t)
+            self.hat_omega_Ridge = self.est_omega_Ridge(self.Y_pre_c, self.Y_pre_t)
+
 
     def did_potentical_outcome(self):
         """
@@ -102,6 +111,23 @@ class SynthDID(Optimize):
 
     def sc_potentical_outcome(self):
         return pd.concat([self.Y_pre_c, self.Y_post_c]).dot(self.hat_omega_ADH)
+    
+    def sparceReg_potentical_outcome(self, model="ElasticNet"):
+        Y_pre_c_intercept = self.Y_pre_c.copy()
+        Y_post_c_intercept = self.Y_post_c.copy()
+        Y_pre_c_intercept["intercept"] = 1
+        Y_post_c_intercept["intercept"] = 1
+
+        if model == "ElasticNet":
+            s_omega = self.hat_omega_ElasticNet
+        elif model == "Lasso":
+            s_omega = self.hat_omega_Lasso
+        elif model == "Ridge":
+            s_omega = self.hat_omega_Ridge
+        else:
+            print(f"model={model} is not supported")
+            return None
+        return pd.concat([Y_pre_c_intercept, Y_post_c_intercept]).dot(s_omega)
 
     def sdid_potentical_outcome(self):
         Y_pre_c_intercept = self.Y_pre_c.copy()
@@ -119,17 +145,43 @@ class SynthDID(Optimize):
 
         return pd.concat([Y_pre_c_intercept.dot(self.hat_omega), post_outcome], axis=0)
 
+    def sparce_sdid_potentical_outcome(self, model="ElasticNet"):
+        Y_pre_c_intercept = self.Y_pre_c.copy()
+        Y_post_c_intercept = self.Y_post_c.copy()
+        Y_pre_c_intercept["intercept"] = 1
+        Y_post_c_intercept["intercept"] = 1
+
+        if model == "ElasticNet":
+            s_omega = self.hat_omega_ElasticNet
+        elif model == "Lasso":
+            s_omega = self.hat_omega_Lasso
+        elif model == "Ridge":
+            s_omega = self.hat_omega_Ridge
+        else:
+            print(f"model={model} is not supported")
+            return None
+
+        base_sc = Y_post_c_intercept @ s_omega
+        lambda_effect = (self.Y_pre_t.T @ self.hat_lambda).values[0]
+        sc_pretrend_with_timeweighted = (
+            Y_pre_c_intercept @ s_omega @ self.hat_lambda
+        )
+
+        post_outcome = base_sc + lambda_effect - sc_pretrend_with_timeweighted
+
+        return pd.concat([Y_pre_c_intercept.dot(s_omega), post_outcome], axis=0)
+
     def target_y(self):
         return self.df.loc[self.pre_term[0] : self.post_term[1], self.treatment].mean(
             axis=1
         )
 
     def estimated_params(self, model="sdid"):
+        Y_pre_c_intercept = self.Y_pre_c.copy()
+        Y_post_c_intercept = self.Y_post_c.copy()
+        Y_pre_c_intercept["intercept"] = 1
+        Y_post_c_intercept["intercept"] = 1
         if model == "sdid":
-            Y_pre_c_intercept = self.Y_pre_c.copy()
-            Y_post_c_intercept = self.Y_post_c.copy()
-            Y_pre_c_intercept["intercept"] = 1
-            Y_post_c_intercept["intercept"] = 1
             return (
                 pd.DataFrame(
                     {
@@ -149,6 +201,27 @@ class SynthDID(Optimize):
                 {
                     "features": self.Y_pre_c.columns,
                     "sc_weight": np.round(self.hat_omega_ADH, 3),
+                }
+            )
+        elif model == "ElasticNet":
+            return pd.DataFrame(
+                {
+                    "features": Y_pre_c_intercept.columns,
+                    "ElasticNet_weight": np.round(self.hat_omega_ElasticNet, 3),
+                }
+            )
+        elif model == "Lasso":
+            return pd.DataFrame(
+                {
+                    "features": Y_pre_c_intercept.columns,
+                    "Lasso_weight": np.round(self.hat_omega_Lasso, 3),
+                }
+            )
+        elif model == "Ridge":
+            return pd.DataFrame(
+                {
+                    "features": Y_pre_c_intercept.columns,
+                    "Ridge_weight": np.round(self.hat_omega_Ridge, 3),
                 }
             )
         else:

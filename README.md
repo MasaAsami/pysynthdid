@@ -1,7 +1,10 @@
 # pysynthdid : Synthetic difference in differences for Python
 
-## Original Paper: 
+## Reference: 
+### original paper:
 Arkhangelsky, Dmitry, et al. Synthetic difference in differences. No. w25532. National Bureau of Economic Research, 2019. https://www.nber.org/papers/w25532
+### R pkg:
+https://github.com/synth-inference/synthdid
 
 ## How to use:
 See the jupyter notebook in `notebook` for basic usage

@@ -270,5 +270,3 @@ if __name__ == "__main__":
     print(sdid.zeta)
     sdid.fit(zeta_type="bayesian_opt")
     print(sdid.zeta)
-
-    sdid.did_plot()

@@ -12,8 +12,7 @@ See the jupyter notebook in [`notebook`](https://github.com/MasaAsami/pysynthdid
   - This is a reproduction experiment note of the original paper, using a famous dataset (CaliforniaSmoking).
 
 - `OtherOmegaEstimationMethods.ipynb`
-  - This note examines CrossValidation for `zeta` and constraint relaxation for `omega`.
-
+  - This note is a different take on the estimation method for parameter `omega` (& `zeta` ). As a result, it confirms the robustness of the estimation method in the original paper.
 
 ## Warning:
 This module is still under development. Please check the logic carefully before using this. (Some optimization algorithms have been simplified.)

@@ -1,10 +1,11 @@
+from ctypes import c_void_p
 from tqdm import tqdm
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import StandardScaler
 from scipy.optimize import fmin_slsqp
 from toolz import reduce, partial
-from sklearn.model_selection import KFold
+from sklearn.model_selection import KFold, TimeSeriesSplit, RepeatedKFold
 from sklearn.linear_model import ElasticNetCV, LassoCV, RidgeCV
 from bayes_opt import BayesianOptimization
 
@@ -124,12 +125,19 @@ class Optimize(object):
 
         return caled_lambda[:n_pre_term]
 
-    def _zeta_given_cv_loss_inverse(self, zeta, cv=5):
-        return -1 * self._zeta_given_cv_loss(zeta, cv)[0]
+    def _zeta_given_cv_loss_inverse(self, zeta, cv=5, split_type="KFold"):
+        return -1 * self._zeta_given_cv_loss(zeta, cv, split_type)[0]
 
-    def _zeta_given_cv_loss(self, zeta, cv=5):
+    def _zeta_given_cv_loss(self, zeta, cv=5, split_type="KFold"):
         nrow = self.Y_pre_c.shape[0]
-        kf = KFold(n_splits=cv)
+        if split_type=="KFold":
+            kf = KFold(n_splits=cv, random_state=self.random_seed)
+        elif split_type=="TimeSeriesSplit":
+            kf = TimeSeriesSplit(n_splits=cv)
+        elif split_type=="RepeatedKFold":
+            _cv = max(2, int(cv/2))
+            kf = RepeatedKFold(n_splits=_cv, n_repeats=_cv,random_state=self.random_seed)
+
         loss_result = []
         nf_result = []
         for train_index, test_index in kf.split(self.Y_pre_c, self.Y_pre_t):
@@ -148,11 +156,11 @@ class Optimize(object):
             )
         return np.mean(loss_result), np.mean(nf_result)
 
-    def gread_search_zeta(self, cv=5, candidate_zata=[]):
+    def gread_search_zeta(self, cv=5, n_candidate=20 ,candidate_zata=[], split_type="KFold"):
 
         if len(candidate_zata) == 0:
 
-            for _z in np.linspace(0.1, self.base_zeta * 2, 30):
+            for _z in np.linspace(0.1, self.base_zeta * 2, n_candidate):
                 candidate_zata.append(_z)
 
             candidate_zata.append(self.base_zeta)
@@ -166,7 +174,7 @@ class Optimize(object):
         print("cv: zeta")
         for _zeta in tqdm(candidate_zata):
             result_loss_dict[_zeta], result_nf_dict[_zeta] = self._zeta_given_cv_loss(
-                _zeta
+                _zeta, cv=cv , split_type=split_type
             )
 
         loss_sorted = sorted(result_loss_dict.items(), key=lambda x: x[1])
@@ -177,22 +185,33 @@ class Optimize(object):
         self,
         cv=5,
         init_points=5,
-        n_iter=10,
+        n_iter=5,
         zeta_max=None,
         zeta_min=None,
+        split_type="KFold",
     ):
         if zeta_max == None:
-            zeta_max = self.base_zeta * 2
+            zeta_max = self.base_zeta * 1.02
+            zeta_max2 = self.base_zeta * 2
 
         if zeta_min == None:
-            zeta_min = 0.01
+            zeta_min = self.base_zeta * 0.98
+            zeta_min2 = 0.01
 
         pbounds = {"zeta": (zeta_min, zeta_max)}
 
         optimizer = BayesianOptimization(
-            f=partial(self._zeta_given_cv_loss_inverse, cv=cv),
+            f=partial(self._zeta_given_cv_loss_inverse, cv=cv, split_type=split_type),
             pbounds=pbounds,
+            random_state=self.random_seed
         )
+
+        optimizer.maximize(
+            init_points=2,
+            n_iter=2,
+        )
+
+        optimizer.set_bounds(new_bounds={"zeta": (zeta_min2, zeta_max2)})
 
         optimizer.maximize(
             init_points=init_points,

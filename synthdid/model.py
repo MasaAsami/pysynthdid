@@ -53,7 +53,7 @@ class SynthDID(Optimize):
         self.n_treat = len(self.treatment)
         self.n_post_term = len(self.Y_post_t)
 
-    def fit(self, model="all", zeta_type="base", force_zeta=None, sparce_estimation=False):
+    def fit(self, model="all", zeta_type="base", force_zeta=None, sparce_estimation=False, cv=5, cv_split_type="KFold", candidate_zata=[], n_candidate=20):
 
         self.base_zeta = self.est_zeta()
 
@@ -61,10 +61,10 @@ class SynthDID(Optimize):
             self.zeta = self.base_zeta
 
         elif zeta_type == "grid_search":
-            self.zeta = self.gread_search_zeta(cv=5, candidate_zata=[])[0]
+            self.zeta = self.gread_search_zeta(cv=cv, n_candidate=n_candidate, candidate_zata=candidate_zata, split_type=cv_split_type)[0]
 
         elif zeta_type == "bayesian_opt":
-            self.zeta = self.bayes_opt_zeta(cv=5)[0]
+            self.zeta = self.bayes_opt_zeta(cv=cv, split_type=cv_split_type)[0]
 
         else:
             print(f"your choice :{zeta_type} is not supported.")

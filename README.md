@@ -7,7 +7,7 @@ Arkhangelsky, Dmitry, et al. Synthetic difference in differences. No. w25532. Na
 https://github.com/synth-inference/synthdid
 
 ## How to use:
-See the jupyter notebook in `notebook` for basic usage
+See the jupyter notebook in [`notebook`](https://github.com/MasaAsami/pysynthdid/tree/main/notebook) for basic usage
 - `ReproductionExperiment_CaliforniaSmoking.ipynb`
   - This is a reproduction experiment note of the original paper, using a famous dataset (CaliforniaSmoking).
 

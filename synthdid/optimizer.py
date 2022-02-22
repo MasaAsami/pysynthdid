@@ -12,7 +12,7 @@ from bayes_opt import BayesianOptimization
 
 class Optimize(object):
     def est_zeta(self):
-        return (self.n_treat * self.n_post_term) ** (1 / 4) * self.Y_pre_c.diff().std().mean()
+        return (self.n_treat * self.n_post_term) ** (1 / 4) * np.std(self.Y_pre_c.diff().dropna().values)
 
     def l2_loss(self, W, X, y, zeta, nrow) -> float:
         if type(y) == pd.core.frame.DataFrame:

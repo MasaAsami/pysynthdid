@@ -74,7 +74,7 @@ class SynthDID(Optimize):
             self.zeta = force_zeta
 
         self.hat_omega = self.est_omega(
-            self.Y_pre_c, self.Y_pre_t, np.round(self.zeta, 10)
+            self.Y_pre_c, self.Y_pre_t, self.zeta
         )
         self.hat_omega_ADH = self.est_omega_ADH()
         self.hat_lambda = self.est_lambda()
@@ -227,7 +227,7 @@ class SynthDID(Optimize):
         else:
             return None
 
-    def delta_plot(self, model="all", post_only=False):
+    def delta_plot(self, model="all", post_only=False, figsize=(10, 7)):
         result = pd.DataFrame({"actual_y": self.target_y()})
 
         result["did"] = self.did_potentical_outcome()
@@ -237,8 +237,8 @@ class SynthDID(Optimize):
         if post_only:
             result = result.loc[self.post_term[0] : self.post_term[1]]
 
-        fig, ax = plt.subplots()
-        fig.set_figwidth(10)
+        fig, ax = plt.subplots(figsize=figsize)
+
         result["actual_y"].plot(ax=ax, color="black", linewidth=1, label="actual_y")
         result["did"].plot(ax=ax, linewidth=1, linestyle="dashed", label="Difference in Differences (mean)")
         result["sc"].plot(ax=ax, linewidth=1, label="Synthetic Control")

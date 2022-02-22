@@ -19,7 +19,7 @@ class Optimize(object):
             y = y.mean(axis=1)
         _X = X.copy()
         _X["intersept"] = 1
-        return np.sum((y - _X.dot(W)) ** 2) + nrow * zeta ** 2 * np.sum(W ** 2)
+        return np.sum((y - _X.dot(W)) ** 2) + nrow * zeta ** 2 * np.sum(W[:-1] ** 2)
 
     def rmse_loss(self, W, X, y, intersept=True) -> float:
         if type(y) == pd.core.frame.DataFrame:

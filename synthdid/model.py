@@ -243,15 +243,13 @@ class SynthDID(Optimize):
         else:
             return None
 
-    def comparison_plot(self, model="all", post_only=False, figsize=(10, 7)):
+    def comparison_plot(self, model="all", figsize=(10, 7)):
         result = pd.DataFrame({"actual_y": self.target_y()})
 
         result["did"] = self.did_potentical_outcome()
         result["sc"] = self.sc_potentical_outcome()
         result["sdid"] = self.sdid_potentical_outcome()
-
-        if post_only:
-            result = result.loc[self.post_term[0] : self.post_term[1]]
+        result = result.loc[self.post_term[0] : self.post_term[1]]
 
         fig, ax = plt.subplots(figsize=figsize)
 
@@ -259,9 +257,6 @@ class SynthDID(Optimize):
         result["did"].plot(ax=ax, linewidth=1, linestyle="dashed", label="Difference in Differences (mean)")
         result["sc"].plot(ax=ax, linewidth=1, label="Synthetic Control")
         result["sdid"].plot(ax=ax,label="Synthetic Difference in Differences")
-
-        if not post_only:
-            ax.axvspan(self.post_term[0], self.post_term[1], alpha=0.3, color="lightblue")
 
         plt.legend()
         plt.show()
@@ -302,6 +297,29 @@ class SynthDID(Optimize):
             ax.set_title(f"Synthetic Difference in Differences : tau {round( post_actural_treat - counterfuctual_post_treat,4)}")
             ax.legend()
             plt.show()
+    
+    def hat_tau(self, model="sdid"):
+        """
+        return ATT
+        """
+        result = pd.DataFrame({"actual_y": self.target_y()})
+        post_actural_treat = result.loc[self.post_term[0]:,"actual_y"].mean()
+
+        if model == "sdid":
+            result["sdid"] = self.sdid_trajectory()
+            time_result = pd.DataFrame({ "time": self.Y_pre_c.index,"sdid_weight": np.round(self.hat_lambda, 3)})
+
+            pre_point = self.Y_pre_c.index @ self.hat_lambda
+            post_point = np.mean(self.Y_post_c.index)
+
+            pre_sdid =  result["sdid"].head(len(self.hat_lambda)) @ self.hat_lambda
+            post_sdid = result.loc[self.post_term[0]:,"sdid"].mean()
+
+            pre_treat = (self.Y_pre_t.T @ self.hat_lambda).values[0]
+            counterfuctual_post_treat = pre_treat + (post_sdid - pre_sdid)
+           
+        return post_actural_treat - counterfuctual_post_treat
+
 
 
 

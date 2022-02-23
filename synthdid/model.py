@@ -232,7 +232,7 @@ class SynthDID(Optimize):
         else:
             return None
 
-    def delta_plot(self, model="all", post_only=False, figsize=(10, 7)):
+    def comparison_plot(self, model="all", post_only=False, figsize=(10, 7)):
         result = pd.DataFrame({"actual_y": self.target_y()})
 
         result["did"] = self.did_potentical_outcome()

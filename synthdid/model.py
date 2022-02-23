@@ -1,3 +1,4 @@
+from code import interact
 from tqdm import tqdm
 import pandas as pd
 import numpy as np
@@ -130,20 +131,24 @@ class SynthDID(Optimize):
         return pd.concat([Y_pre_c_intercept, Y_post_c_intercept]).dot(s_omega)
 
     def sdid_potentical_outcome(self):
-        Y_pre_c_intercept = self.Y_pre_c.copy()
-        Y_post_c_intercept = self.Y_post_c.copy()
-        Y_pre_c_intercept["intercept"] = 1
-        Y_post_c_intercept["intercept"] = 1
+        Y_pre_c = self.Y_pre_c.copy()
+        Y_post_c = self.Y_post_c.copy()
+        hat_omega = self.hat_omega[:-1]
 
-        base_sc = Y_post_c_intercept @ self.hat_omega
+        base_sc = Y_post_c @ hat_omega
         lambda_effect = (self.Y_pre_t.T @ self.hat_lambda).values[0]
         sc_pretrend_with_timeweighted = (
-            Y_pre_c_intercept @ self.hat_omega @ self.hat_lambda
+            Y_pre_c @ hat_omega @ self.hat_lambda
         )
 
         post_outcome = base_sc + lambda_effect - sc_pretrend_with_timeweighted
 
-        return pd.concat([Y_pre_c_intercept.dot(self.hat_omega), post_outcome], axis=0)
+        n_features = Y_pre_c.shape[1]
+        start_w = np.repeat(1 / n_features, n_features) 
+        _intercept = (start_w - hat_omega) @ Y_pre_c.T @ self.hat_lambda 
+        pre_outcome = Y_pre_c.dot(hat_omega) + _intercept
+
+        return pd.concat([pre_outcome, post_outcome], axis=0)
 
     def sparce_sdid_potentical_outcome(self, model="ElasticNet"):
         Y_pre_c_intercept = self.Y_pre_c.copy()

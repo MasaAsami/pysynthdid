@@ -129,6 +129,17 @@ class SynthDID(Optimize):
             print(f"model={model} is not supported")
             return None
         return pd.concat([Y_pre_c_intercept, Y_post_c_intercept]).dot(s_omega)
+    
+    def sdid_trajectory(self):
+        hat_omega = self.hat_omega[:-1]
+        Y_c = pd.concat([self.Y_pre_c, self.Y_post_c])
+        n_features = self.Y_pre_c.shape[1]
+        start_w = np.repeat(1 / n_features, n_features)
+
+        _intercept = (start_w - hat_omega) @ self.Y_pre_c.T @ self.hat_lambda 
+
+        return Y_c.dot(hat_omega) + _intercept
+
 
     def sdid_potentical_outcome(self):
         Y_pre_c = self.Y_pre_c.copy()
@@ -141,12 +152,12 @@ class SynthDID(Optimize):
             Y_pre_c @ hat_omega @ self.hat_lambda
         )
 
-        post_outcome = base_sc + lambda_effect - sc_pretrend_with_timeweighted
-
         n_features = Y_pre_c.shape[1]
         start_w = np.repeat(1 / n_features, n_features) 
         _intercept = (start_w - hat_omega) @ Y_pre_c.T @ self.hat_lambda 
-        pre_outcome = Y_pre_c.dot(hat_omega) + _intercept
+        pre_outcome = Y_pre_c.dot(hat_omega)
+
+        post_outcome = base_sc + lambda_effect - sc_pretrend_with_timeweighted 
 
         return pd.concat([pre_outcome, post_outcome], axis=0)
 
@@ -252,9 +263,46 @@ class SynthDID(Optimize):
         if not post_only:
             ax.axvspan(self.post_term[0], self.post_term[1], alpha=0.3, color="lightblue")
 
-        plt.title("")
         plt.legend()
         plt.show()
+    
+    def plot(self, model="sdid", figsize=(10, 7)):
+
+        result = pd.DataFrame({"actual_y": self.target_y()})
+
+        if model == "sdid":
+            result["sdid"] = self.sdid_trajectory()
+            time_result = pd.DataFrame({ "time": self.Y_pre_c.index,"sdid_weight": np.round(self.hat_lambda, 3)})
+
+            pre_point = self.Y_pre_c.index @ self.hat_lambda
+            post_point = np.mean(self.Y_post_c.index)
+
+            pre_sdid =  result["sdid"].head(len(self.hat_lambda)) @ self.hat_lambda
+            post_sdid = result.loc[self.post_term[0]:,"sdid"].mean()
+
+            pre_treat = (self.Y_pre_t.T @ self.hat_lambda).values[0]
+            counterfuctual_post_treat = pre_treat + (post_sdid - pre_sdid)
+            post_actural_treat = result.loc[self.post_term[0]:,"actual_y"].mean()
+
+
+            fig, ax = plt.subplots(figsize=figsize)
+
+            result["actual_y"].plot(ax=ax, color="blue", linewidth=1, label="treatment group",alpha=0.6)
+            result["sdid"].plot(ax=ax, color="red", linewidth=1, label="syntetic control",alpha=0.6)
+            ax.plot([pre_point, post_point], [pre_sdid, post_sdid], label='', marker='o',color="red")
+            ax.plot([pre_point, post_point], [pre_treat, post_actural_treat], label='', marker='o',color="blue")
+            ax.plot([pre_point, post_point], [pre_treat, counterfuctual_post_treat], label='', marker='o',color="blue",linewidth=1, linestyle="dashed", alpha=0.3)
+            
+            ax.axvline(x=self.post_term[0], linewidth=1, linestyle="dashed",color ="black",alpha=0.3)
+
+            ax2 = ax.twinx()
+            ax2.bar(time_result["time"],time_result["sdid_weight"],color="#ff7f00",label="time weight",width=1.0, alpha=0.6)
+            ax2.set_ylim(0, 3)
+            ax2.axis("off")
+            ax.set_title(f"Synthetic Difference in Differences : tau {round( post_actural_treat - counterfuctual_post_treat,4)}")
+            ax.legend()
+            plt.show()
+
 
 
 if __name__ == "__main__":

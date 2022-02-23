@@ -1,0 +1,33 @@
+---
+title: "Sythdid"
+output:
+  html_document: default
+  pdf_document: default
+  word_document: default
+---
+
+## setup and estimation
+
+```{r setup, include=FALSE}
+library(synthdid)
+
+# Estimate the effect of California Proposition 99 on cigarette consumption
+data('california_prop99')
+setup = panel.matrices(california_prop99)
+```
+
+```{r tau}
+tau.hat = synthdid_estimate(setup$Y, setup$N0, setup$T0)
+```
+
+##  Plots
+
+```{r pressure, echo=FALSE}
+plot(tau.hat)
+```
+
+## Summary
+
+```{r tau}
+summary(tau.hat)
+```

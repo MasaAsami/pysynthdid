@@ -1,13 +1,46 @@
 # pysynthdid : Synthetic difference in differences for Python
 
-## Reference: 
+## What is Synthetic difference in differences:
+(TBD) Will be described soon.
+
 ### original paper:
 Arkhangelsky, Dmitry, et al. Synthetic difference in differences. No. w25532. National Bureau of Economic Research, 2019. https://www.nber.org/papers/w25532
 ### R pkg:
 https://github.com/synth-inference/synthdid
 
+## Installation
+This package is still under development. We will create `setup.py` after the following specifications are met.
+  - Refactoring and better documentation
+  - Completion of the TEST code
+  - Convergence diagnosis of optimization
+  - Calculation of SE code(Bootstrap Variance Estimation, Jackknife Variance Estimation)
+  - Enhanced visualization code
+
 ## How to use:
-See the jupyter notebook in [`notebook`](https://github.com/MasaAsami/pysynthdid/tree/main/notebook) for basic usage
+### Here's a simple example :
+- setup
+```python
+from synthdid.model import SynthDID
+from synthdid.sample_data import fetch_CaliforniaSmoking
+
+df = fetch_CaliforniaSmoking()
+
+PRE_TEREM = [1970, 1988]
+POST_TEREM = [1989, 2000]
+
+TREATMENT = ["California"]
+```
+- estimation & plot
+```python
+sdid = SynthDID(df, PRE_TEREM, POST_TEREM, TREATMENT)
+sdid.fit(zeta_type="base")
+sdid.plot(model="sdid")
+```
+
+![image](https://user-images.githubusercontent.com/16971400/155323335-5f0beca9-b2a7-4a5d-8896-b62778478cd9.png)
+
+- Details of each method will be created later.
+### See the jupyter notebook in [`notebook`](https://github.com/MasaAsami/pysynthdid/tree/main/notebook) for basic usage
 - `ReproductionExperiment_CaliforniaSmoking.ipynb`
   - This is a reproduction experiment note of the original paper, using a famous dataset (CaliforniaSmoking).
 
@@ -17,9 +50,3 @@ See the jupyter notebook in [`notebook`](https://github.com/MasaAsami/pysynthdid
 ## Warning:
 This module is still under development. Please check the logic carefully before using this. (Some optimization algorithms have been simplified.)
 
-The following specifications will be added in the near future.
-- Refactoring and better documentation
-- Completion of the TEST code
-- Calculation of SE code(Bootstrap Variance Estimation, Jackknife Variance Estimation)
-- Enhanced visualization code
-- Calculation of tau

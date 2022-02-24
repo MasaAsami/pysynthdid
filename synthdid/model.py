@@ -147,8 +147,8 @@ class SynthDID(Optimize):
         hat_omega = self.hat_omega[:-1]
 
         base_sc = Y_post_c @ hat_omega
-        lambda_effect = (self.Y_pre_t.T @ self.hat_lambda).values[0]
-        sc_pretrend_with_timeweighted = (
+        pre_treat_base = (self.Y_pre_t.T @ self.hat_lambda).values[0]
+        pre_control_base = (
             Y_pre_c @ hat_omega @ self.hat_lambda
         )
 
@@ -157,7 +157,7 @@ class SynthDID(Optimize):
         _intercept = (start_w - hat_omega) @ Y_pre_c.T @ self.hat_lambda 
         pre_outcome = Y_pre_c.dot(hat_omega)
 
-        post_outcome = base_sc + lambda_effect - sc_pretrend_with_timeweighted 
+        post_outcome = base_sc + pre_treat_base - pre_control_base 
 
         return pd.concat([pre_outcome, post_outcome], axis=0)
 
@@ -178,12 +178,12 @@ class SynthDID(Optimize):
             return None
 
         base_sc = Y_post_c_intercept @ s_omega
-        lambda_effect = (self.Y_pre_t.T @ self.hat_lambda).values[0]
-        sc_pretrend_with_timeweighted = (
+        pre_treat_base = (self.Y_pre_t.T @ self.hat_lambda).values[0]
+        pre_control_base = (
             Y_pre_c_intercept @ s_omega @ self.hat_lambda
         )
 
-        post_outcome = base_sc + lambda_effect - sc_pretrend_with_timeweighted
+        post_outcome = base_sc + pre_treat_base - pre_control_base
 
         return pd.concat([Y_pre_c_intercept.dot(s_omega), post_outcome], axis=0)
 
@@ -350,9 +350,6 @@ class SynthDID(Optimize):
             counterfuctual_post_treat = post_sc
 
         return post_actural_treat - counterfuctual_post_treat
-
-
-
 
 if __name__ == "__main__":
     from sample_data import fetch_CaliforniaSmoking

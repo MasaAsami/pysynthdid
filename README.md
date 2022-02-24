@@ -47,6 +47,11 @@ sdid.plot(model="sdid")
 - `OtherOmegaEstimationMethods.ipynb`
   - This note is a different take on the estimation method for parameter `omega` (& `zeta` ). As a result, it confirms the robustness of the estimation method in the original paper.
 
+- `ScaleTesting_of_DonorPools.ipynb`
+  - In this note, we will check how the estimation results change with changes in the scale of the donor pool features.
+  - Adding donor pools with extremely different scales (e.g., 10x) can have a significant impact (bias) on the estimates. 
+  - If different scales are mixed, as is usually the case in traditional regression, preprocessing such as logarithmic transformation is likely to be necessary
+
 ## Warning:
 This module is still under development. Please check the logic carefully before using this. (Some optimization algorithms have been simplified.)
 

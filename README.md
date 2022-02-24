@@ -53,5 +53,7 @@ sdid.plot(model="sdid")
   - If different scales are mixed, as is usually the case in traditional regression, preprocessing such as logarithmic transformation is likely to be necessary
 
 ## Warning:
-This module is still under development. Please check the logic carefully before using this. (Some optimization algorithms have been simplified.)
+- This module is still under development. 
+- Classic SCM is also implemented for comparison, but it is still not W(V) considering the so-called `V` (importance).
+- Please check the logic carefully before using this. (Some optimization algorithms have been simplified.)
 

@@ -51,7 +51,7 @@ class TestModelSynth(object):
         assert error_sc_omega < error_random_omega
 
         adh_corr, _p = spearmanr(omega_result["omega_ADH"], omega_result["sc_weight"])
-        assert adh_corr >= 0.7
+        assert adh_corr >= 0.9
 
         # SDID Result
         error_sdid_omega = np.sqrt(
@@ -62,7 +62,7 @@ class TestModelSynth(object):
         sdid_corr, _p = spearmanr(
             omega_result["omega_sdid"], omega_result["sdid_weight"]
         )
-        assert sdid_corr >= 0.7
+        assert sdid_corr >= 0.9
 
         lambda_result = pd.merge(
             test_lambda, hat_lambda_sdid, left_on="year", right_on="time", how="left"
@@ -81,7 +81,7 @@ class TestModelSynth(object):
         sdid_corr, _p = spearmanr(
             lambda_result["lambda_sdid"], lambda_result["sdid_weight"]
         )
-        assert sdid_corr >= 0.7
+        assert sdid_corr >= 0.9
 
     def test_multi_treatment(self):
         """

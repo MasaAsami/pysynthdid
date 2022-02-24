@@ -264,20 +264,20 @@ class SynthDID(Optimize):
     def plot(self, model="sdid", figsize=(10, 7)):
 
         result = pd.DataFrame({"actual_y": self.target_y()})
+        post_actural_treat = result.loc[self.post_term[0]:,"actual_y"].mean()
+        post_point = np.mean(self.Y_post_c.index)
 
         if model == "sdid":
             result["sdid"] = self.sdid_trajectory()
             time_result = pd.DataFrame({ "time": self.Y_pre_c.index,"sdid_weight": np.round(self.hat_lambda, 3)})
 
             pre_point = self.Y_pre_c.index @ self.hat_lambda
-            post_point = np.mean(self.Y_post_c.index)
 
             pre_sdid =  result["sdid"].head(len(self.hat_lambda)) @ self.hat_lambda
             post_sdid = result.loc[self.post_term[0]:,"sdid"].mean()
 
             pre_treat = (self.Y_pre_t.T @ self.hat_lambda).values[0]
             counterfuctual_post_treat = pre_treat + (post_sdid - pre_sdid)
-            post_actural_treat = result.loc[self.post_term[0]:,"actual_y"].mean()
 
 
             fig, ax = plt.subplots(figsize=figsize)
@@ -297,6 +297,32 @@ class SynthDID(Optimize):
             ax.set_title(f"Synthetic Difference in Differences : tau {round( post_actural_treat - counterfuctual_post_treat,4)}")
             ax.legend()
             plt.show()
+        
+        elif model == "sc":
+            result["sc"] = self.sc_potentical_outcome()
+
+            pre_sc =  result.loc[:self.pre_term[1],"sc"].mean()
+            post_sc = result.loc[self.post_term[0]:,"sc"].mean()
+
+            pre_treat = self.Y_pre_t.mean()
+            counterfuctual_post_treat = post_sc
+
+            fig, ax = plt.subplots(figsize=figsize)
+
+            result["actual_y"].plot(ax=ax, color="blue", linewidth=1, label="treatment group",alpha=0.6)
+            result["sc"].plot(ax=ax, color="red", linewidth=1, label="syntetic control",alpha=0.6)
+            
+            ax.annotate("" ,xy = (post_point, post_actural_treat) , xytext =(post_point, counterfuctual_post_treat),
+                        arrowprops=dict(arrowstyle= "-|>", color = "black"))
+
+            ax.axvline(x=self.post_term[0], linewidth=1, linestyle="dashed",color ="black",alpha=0.3)
+            ax.set_title(f"Synthetic Control Methods : tau {round( post_actural_treat - counterfuctual_post_treat,4)}")
+            ax.legend()
+            plt.show()
+        
+
+        else:
+            print(f"sorry: {model} is not yet available.")
     
     def hat_tau(self, model="sdid"):
         """

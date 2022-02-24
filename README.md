@@ -50,6 +50,7 @@ sdid.plot(model="sdid")
 - `ScaleTesting_of_DonorPools.ipynb`
   - In this note, we will check how the estimation results change with changes in the scale of the donor pool features.
   - Adding donor pools with extremely different scales (e.g., 10x) can have a significant impact (bias) on the estimates. 
+  - If different scales are mixed, as is usually the case in traditional regression, preprocessing such as logarithmic transformation is likely to be necessary
 
 ## Warning:
 This module is still under development. Please check the logic carefully before using this. (Some optimization algorithms have been simplified.)

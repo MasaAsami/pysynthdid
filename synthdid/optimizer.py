@@ -28,6 +28,19 @@ class Optimize(object):
         if intersept:
             _X["intersept"] = 1
         return np.mean(np.sqrt((y - _X.dot(W)) ** 2))
+    
+    def rmse_loss_with_V(self, W, V, X, y) -> float:
+        if type(y) == pd.core.frame.DataFrame:
+            y = y.mean(axis=1)
+        _rss = np.sqrt((y - X.dot(W)) ** 2)
+
+        _n = len(y)
+        _importance = np.zeros((_n,_n))
+
+        np.fill_diagonal(_importance, V)
+
+        return np.sqrt(_rss @ _importance @ _rss)
+
 
     def est_omega(self, Y_pre_c, Y_pre_t, zeta):
         Y_pre_t = Y_pre_t.copy()
@@ -60,7 +73,7 @@ class Optimize(object):
 
         return caled_w
 
-    def est_omega_ADH(self):
+    def est_omega_ADH(self, simple_sc=True):
         Y_pre_t = self.Y_pre_t.copy()
 
         n_features = self.Y_pre_c.shape[1]
@@ -70,29 +83,44 @@ class Optimize(object):
 
         if type(Y_pre_t) == pd.core.frame.DataFrame:
             Y_pre_t = Y_pre_t.mean(axis=1)
-            # Y_pre_t.columns = "treatment_group"
-
-        # normalized
-        # temp_df = pd.concat([Y_pre_c, Y_pre_t], axis=1)
-        # ss = StandardScaler()
-        # ss_df = pd.DataFrame(ss.fit_transform(temp_df) , columns=temp_df.columns, index=temp_df.index)
-
-        # ss_Y_pre_c = ss_df.iloc[:,:-1]
-        # ss_Y_pre_t = ss_df.iloc[:,-1]
 
         # Required to have non negative values
         w_bnds = tuple((0, 1) for i in range(n_features))
 
-        caled_w = fmin_slsqp(
-            partial(self.rmse_loss, X=self.Y_pre_c, y=Y_pre_t, intersept=False),
-            _w,
-            f_eqcons=lambda x: np.sum(x) - 1,
-            bounds=w_bnds,
-            disp=False,
-        )
+        if simple_sc:
+            caled_w = fmin_slsqp(
+                partial(self.rmse_loss, X=self.Y_pre_c, y=Y_pre_t, intersept=False),
+                _w,
+                f_eqcons=lambda x: np.sum(x) - 1,
+                bounds=w_bnds,
+                disp=False,
+            )
 
-        return caled_w
+            return caled_w
+        else:
+            # normalized
+            temp_df = pd.concat([self.Y_pre_c, self.Y_pre_t], axis=1)
+            ss = StandardScaler()
+            ss_df = pd.DataFrame(ss.fit_transform(temp_df) , columns=temp_df.columns, index=temp_df.index)
 
+            ss_Y_pre_c = ss_df.iloc[:,:-1]
+            ss_Y_pre_t = ss_df.iloc[:,-1]
+
+            lsgr = LassoCV(cv=5, fit_intercept=False, positive=True, random_state=self.random_seed)
+            lsgr.fit(ss_Y_pre_c, ss_Y_pre_t)
+
+            self.caled_v = lsgr.coef_
+
+            caled_w = fmin_slsqp(
+                partial(self.rmse_loss_with_V, V=self.caled_v, X=self.Y_pre_c, y=Y_pre_t),
+                _w,
+                f_eqcons=lambda x: np.sum(x) - 1,
+                bounds=w_bnds,
+                disp=False,
+            )
+            return caled_w
+            
+        
     def est_lambda(self):
         Y_pre_c_T = self.Y_pre_c.T
         Y_post_c_T = self.Y_post_c.T

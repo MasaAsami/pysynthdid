@@ -54,7 +54,7 @@ class SynthDID(Optimize):
         self.n_treat = len(self.treatment)
         self.n_post_term = len(self.Y_post_t)
 
-    def fit(self, model="all", zeta_type="base", force_zeta=None, sparce_estimation=False, cv=5, cv_split_type="KFold", candidate_zata=[], n_candidate=20):
+    def fit(self, model="all", zeta_type="base", force_zeta=None, sparce_estimation=False, cv=5, cv_split_type="KFold", candidate_zata=[], n_candidate=20, simple_sc=True):
 
         self.base_zeta = self.est_zeta()
 
@@ -77,7 +77,7 @@ class SynthDID(Optimize):
         self.hat_omega = self.est_omega(
             self.Y_pre_c, self.Y_pre_t, self.zeta
         )
-        self.hat_omega_ADH = self.est_omega_ADH()
+        self.hat_omega_ADH = self.est_omega_ADH(simple_sc=simple_sc)
         self.hat_lambda = self.est_lambda()
 
         if sparce_estimation:
@@ -343,7 +343,12 @@ class SynthDID(Optimize):
 
             pre_treat = (self.Y_pre_t.T @ self.hat_lambda).values[0]
             counterfuctual_post_treat = pre_treat + (post_sdid - pre_sdid)
-           
+        
+        elif model == "sc":
+            result["sc"] = self.sc_potentical_outcome()
+            post_sc = result.loc[self.post_term[0]:,"sc"].mean()
+            counterfuctual_post_treat = post_sc
+
         return post_actural_treat - counterfuctual_post_treat
 
 

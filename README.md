@@ -54,6 +54,5 @@ sdid.plot(model="sdid")
 
 ## Warning:
 - This module is still under development. 
-- Classic SCM is also implemented for comparison, but it is still not W(V) considering the so-called `V` (importance).
 - Please check the logic carefully before using this. (Some optimization algorithms have been simplified.)
 

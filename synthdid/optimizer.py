@@ -6,7 +6,7 @@ from sklearn.preprocessing import StandardScaler
 from scipy.optimize import fmin_slsqp
 from toolz import reduce, partial
 from sklearn.model_selection import KFold, TimeSeriesSplit, RepeatedKFold
-from sklearn.linear_model import ElasticNetCV, LassoCV, RidgeCV
+from sklearn.linear_model import ElasticNetCV, LassoCV, RidgeCV, LinearRegression
 from bayes_opt import BayesianOptimization
 
 
@@ -34,14 +34,48 @@ class Optimize(object):
     def rmse_loss_with_V(self, W, V, X, y) -> float:
         if type(y) == pd.core.frame.DataFrame:
             y = y.mean(axis=1)
-        _rss = np.sqrt((y - X.dot(W)) ** 2)
+        _rss = (y - X.dot(W)) ** 2
 
         _n = len(y)
         _importance = np.zeros((_n, _n))
 
         np.fill_diagonal(_importance, V)
 
-        return np.sqrt(_rss @ _importance @ _rss)
+        return np.sum(_importance @ _rss)
+
+    def _v_loss(self, V, X, y):
+        Y_pre_t = self.Y_pre_t.copy()
+
+        n_features = self.Y_pre_c.shape[1]
+        _w = np.repeat(1 / n_features, n_features)
+
+        if type(Y_pre_t) == pd.core.frame.DataFrame:
+            Y_pre_t = Y_pre_t.mean(axis=1)
+
+        # Required to have non negative values
+        w_bnds = tuple((0, 1) for i in range(n_features))
+        _caled_w = fmin_slsqp(
+            partial(self.rmse_loss_with_V, V=V, X=X, y=y),
+            _w,
+            f_eqcons=lambda x: np.sum(x) - 1,
+            bounds=w_bnds,
+            disp=False,
+        )
+
+        return self.rmse_loss(_caled_w, self.Y_pre_c, Y_pre_t, intersept=False)
+
+    def estimate_v(self, additonal_X, additonal_y):
+        _len = len(additonal_X)
+        _v = np.repeat(1 / _len, _len)
+
+        caled_v = fmin_slsqp(
+            partial(self._v_loss, X=additonal_X, y=additonal_y),
+            _v,
+            f_eqcons=lambda x: np.sum(x) - 1,
+            bounds=tuple((0, 1) for i in range(_len)),
+            disp=False,
+        )
+        return caled_v
 
     def est_omega(self, Y_pre_c, Y_pre_t, zeta):
         Y_pre_t = Y_pre_t.copy()
@@ -74,7 +108,9 @@ class Optimize(object):
 
         return caled_w
 
-    def est_omega_ADH(self, simple_sc=True):
+    def est_omega_ADH(
+        self, simple_sc=True, additonal_X=pd.DataFrame(), additonal_y=pd.DataFrame()
+    ):
         Y_pre_t = self.Y_pre_t.copy()
 
         n_features = self.Y_pre_c.shape[1]
@@ -99,22 +135,21 @@ class Optimize(object):
 
             return caled_w
         else:
+            assert additonal_X.shape[1] == self.Y_pre_c.shape[1]
+            if type(additonal_y) == pd.core.frame.DataFrame:
+                additonal_y = additonal_y.mean(axis=1)
+
             # normalized
-            temp_df = pd.concat([self.Y_pre_c, self.Y_pre_t], axis=1)
+            temp_df = pd.concat([additonal_X, additonal_y], axis=1)
             ss = StandardScaler()
             ss_df = pd.DataFrame(
                 ss.fit_transform(temp_df), columns=temp_df.columns, index=temp_df.index
             )
 
-            ss_Y_pre_c = ss_df.iloc[:, :-1]
-            ss_Y_pre_t = ss_df.iloc[:, -1]
+            ss_X = ss_df.iloc[:, :-1]
+            ss_y = ss_df.iloc[:, -1]
 
-            lsgr = LassoCV(
-                cv=5, fit_intercept=False, positive=True, random_state=self.random_seed
-            )
-            lsgr.fit(ss_Y_pre_c, ss_Y_pre_t)
-
-            self.caled_v = lsgr.coef_
+            self.caled_v = self.estimate_v(additonal_X=ss_X, additonal_y=ss_y)
 
             caled_w = fmin_slsqp(
                 partial(

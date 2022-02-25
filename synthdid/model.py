@@ -65,6 +65,9 @@ class SynthDID(Optimize):
         candidate_zata=[],
         n_candidate=20,
         simple_sc=True,
+        sc_v_model="linear",
+        additonal_X=pd.DataFrame(),
+        additonal_y=pd.DataFrame(),
     ):
 
         self.base_zeta = self.est_zeta()
@@ -91,7 +94,9 @@ class SynthDID(Optimize):
             self.zeta = force_zeta
 
         self.hat_omega = self.est_omega(self.Y_pre_c, self.Y_pre_t, self.zeta)
-        self.hat_omega_ADH = self.est_omega_ADH(simple_sc=simple_sc)
+        self.hat_omega_ADH = self.est_omega_ADH(
+            simple_sc=simple_sc, additonal_X=additonal_X, additonal_y=additonal_y
+        )
         self.hat_lambda = self.est_lambda()
 
         if sparce_estimation:

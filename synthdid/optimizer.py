@@ -43,7 +43,7 @@ class Optimize(object):
 
         return np.sum(_importance @ _rss)
 
-    def _v_loss(self, V, X, y):
+    def _v_loss(self, V, X, y, return_loss=True):
         Y_pre_t = self.Y_pre_t.copy()
 
         n_features = self.Y_pre_c.shape[1]
@@ -61,15 +61,18 @@ class Optimize(object):
             bounds=w_bnds,
             disp=False,
         )
+        if return_loss:
+            return self.rmse_loss(_caled_w, self.Y_pre_c, Y_pre_t, intersept=False)
+        else:
+            return _caled_w
 
-        return self.rmse_loss(_caled_w, self.Y_pre_c, Y_pre_t, intersept=False)
 
-    def estimate_v(self, additonal_X, additonal_y):
-        _len = len(additonal_X)
+    def estimate_v(self, additional_X, additional_y):
+        _len = len(additional_X)
         _v = np.repeat(1 / _len, _len)
 
         caled_v = fmin_slsqp(
-            partial(self._v_loss, X=additonal_X, y=additonal_y),
+            partial(self._v_loss, X=additional_X, y=additional_y),
             _v,
             f_eqcons=lambda x: np.sum(x) - 1,
             bounds=tuple((0, 1) for i in range(_len)),
@@ -109,7 +112,7 @@ class Optimize(object):
         return caled_w
 
     def est_omega_ADH(
-        self, simple_sc=True, additonal_X=pd.DataFrame(), additonal_y=pd.DataFrame()
+        self, simple_sc=True, additional_X=pd.DataFrame(), additional_y=pd.DataFrame()
     ):
         Y_pre_t = self.Y_pre_t.copy()
 
@@ -135,12 +138,12 @@ class Optimize(object):
 
             return caled_w
         else:
-            assert additonal_X.shape[1] == self.Y_pre_c.shape[1]
-            if type(additonal_y) == pd.core.frame.DataFrame:
-                additonal_y = additonal_y.mean(axis=1)
+            assert additional_X.shape[1] == self.Y_pre_c.shape[1]
+            if type(additional_y) == pd.core.frame.DataFrame:
+                additional_y = additional_y.mean(axis=1)
 
             # normalized
-            temp_df = pd.concat([additonal_X, additonal_y], axis=1)
+            temp_df = pd.concat([additional_X, additional_y], axis=1)
             ss = StandardScaler()
             ss_df = pd.DataFrame(
                 ss.fit_transform(temp_df), columns=temp_df.columns, index=temp_df.index
@@ -149,18 +152,12 @@ class Optimize(object):
             ss_X = ss_df.iloc[:, :-1]
             ss_y = ss_df.iloc[:, -1]
 
-            self.caled_v = self.estimate_v(additonal_X=ss_X, additonal_y=ss_y)
+            add_X = pd.concat([self.Y_pre_c, ss_X])
+            add_y = pd.concat([Y_pre_t, ss_y])
 
-            caled_w = fmin_slsqp(
-                partial(
-                    self.rmse_loss_with_V, V=self.caled_v, X=self.Y_pre_c, y=Y_pre_t
-                ),
-                _w,
-                f_eqcons=lambda x: np.sum(x) - 1,
-                bounds=w_bnds,
-                disp=False,
-            )
-            return caled_w
+            self.caled_v = self.estimate_v(additional_X=add_X, additional_y=add_y)
+
+            return self._v_loss(self.caled_v, X=add_X, y=add_y, return_loss=False)
 
     def est_lambda(self):
         Y_pre_c_T = self.Y_pre_c.T

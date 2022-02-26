@@ -66,8 +66,8 @@ class SynthDID(Optimize):
         n_candidate=20,
         simple_sc=True,
         sc_v_model="linear",
-        additonal_X=pd.DataFrame(),
-        additonal_y=pd.DataFrame(),
+        additional_X=pd.DataFrame(),
+        additional_y=pd.DataFrame(),
     ):
 
         self.base_zeta = self.est_zeta()
@@ -95,7 +95,7 @@ class SynthDID(Optimize):
 
         self.hat_omega = self.est_omega(self.Y_pre_c, self.Y_pre_t, self.zeta)
         self.hat_omega_ADH = self.est_omega_ADH(
-            simple_sc=simple_sc, additonal_X=additonal_X, additonal_y=additonal_y
+            simple_sc=simple_sc, additional_X=additional_X, additional_y=additional_y
         )
         self.hat_lambda = self.est_lambda()
 

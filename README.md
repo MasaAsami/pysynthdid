@@ -12,9 +12,7 @@ https://github.com/synth-inference/synthdid
 This package is still under development. We will create `setup.py` after the following specifications are met.
   - Refactoring and better documentation
   - Completion of the TEST code
-  - Convergence diagnosis of optimization
   - Calculation of SE code(Bootstrap Variance Estimation, Jackknife Variance Estimation)
-  - Enhanced visualization code
 
 ## How to use:
 ### Here's a simple example :

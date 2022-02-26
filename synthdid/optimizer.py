@@ -1,12 +1,11 @@
-from ctypes import c_void_p
 from tqdm import tqdm
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import StandardScaler
 from scipy.optimize import fmin_slsqp
-from toolz import reduce, partial
+from toolz import partial
 from sklearn.model_selection import KFold, TimeSeriesSplit, RepeatedKFold
-from sklearn.linear_model import ElasticNetCV, LassoCV, RidgeCV, LinearRegression
+from sklearn.linear_model import ElasticNetCV, LassoCV, RidgeCV
 from bayes_opt import BayesianOptimization
 
 
@@ -52,7 +51,6 @@ class Optimize(object):
         if type(Y_pre_t) == pd.core.frame.DataFrame:
             Y_pre_t = Y_pre_t.mean(axis=1)
 
-        # Required to have non negative values
         w_bnds = tuple((0, 1) for i in range(n_features))
         _caled_w = fmin_slsqp(
             partial(self.rmse_loss_with_V, V=V, X=X, y=y),
@@ -92,7 +90,6 @@ class Optimize(object):
 
         if type(Y_pre_t) == pd.core.frame.DataFrame:
             Y_pre_t = Y_pre_t.mean(axis=1)
-            # Y_pre_t.columns = "treatment_group"
 
         # Required to have non negative values
         max_bnd = abs(Y_pre_t.mean()) * 2
@@ -112,7 +109,7 @@ class Optimize(object):
         return caled_w
 
     def est_omega_ADH(
-        self, simple_sc=True, additional_X=pd.DataFrame(), additional_y=pd.DataFrame()
+        self, additional_X=pd.DataFrame(), additional_y=pd.DataFrame()
     ):
         Y_pre_t = self.Y_pre_t.copy()
 
@@ -127,7 +124,7 @@ class Optimize(object):
         # Required to have non negative values
         w_bnds = tuple((0, 1) for i in range(n_features))
 
-        if simple_sc:
+        if len(additional_X) == 0:
             caled_w = fmin_slsqp(
                 partial(self.rmse_loss, X=self.Y_pre_c, y=Y_pre_t, intersept=False),
                 _w,
@@ -172,9 +169,7 @@ class Optimize(object):
 
         if type(Y_post_c_T) == pd.core.frame.DataFrame:
             Y_post_c_T = Y_post_c_T.mean(axis=1)
-            # Y_post_c_T.columns = "mean_Y_post"
 
-        # Required to have non negative values
         max_bnd = abs(Y_post_c_T.mean()) * 2
         lambda_bnds = tuple(
             (0, 1) if i < n_pre_term else (max_bnd * -1, max_bnd)
@@ -224,9 +219,12 @@ class Optimize(object):
             )
         return np.mean(loss_result), np.mean(nf_result)
 
-    def gread_search_zeta(
+    def grid_search_zeta(
         self, cv=5, n_candidate=20, candidate_zata=[], split_type="KFold"
     ):
+        """
+        Search for zeta using grid search instead of theoretical values
+        """
 
         if len(candidate_zata) == 0:
 
@@ -260,6 +258,9 @@ class Optimize(object):
         zeta_min=None,
         split_type="KFold",
     ):
+        """
+        Search for zeta using Bayesian Optimization instead of theoretical values
+        """
         if zeta_max == None:
             zeta_max = self.base_zeta * 1.02
             zeta_max2 = self.base_zeta * 2
@@ -292,6 +293,9 @@ class Optimize(object):
 
         return (optimizer.max["params"]["zeta"], optimizer.max["target"] * -1)
 
+    #####
+    # The following is for sparse estimation
+    ####
     def est_omega_ElasticNet(self, Y_pre_c, Y_pre_t):
         Y_pre_t = Y_pre_t.copy()
 

@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 class Plot(object):
     def plot(self, model="sdid", figsize=(10, 7)):
-    
+
         result = pd.DataFrame({"actual_y": self.target_y()})
         post_actural_treat = result.loc[self.post_term[0] :, "actual_y"].mean()
         post_point = np.mean(self.Y_post_c.index)
@@ -216,4 +216,3 @@ class Plot(object):
             bbox_to_anchor=(1.05, 1), loc="upper left", borderaxespad=0, fontsize=18
         )
         plt.show()
-    

@@ -3,9 +3,11 @@ import numpy as np
 
 from synthdid.optimizer import Optimize
 from synthdid.plot import Plot
+from synthdid.variance import Variance
+from synthdid.summary import Summary
 
 
-class SynthDID(Optimize, Plot):
+class SynthDID(Optimize, Plot, Variance, Summary):
     """
     hogehoge
     """
@@ -32,6 +34,9 @@ class SynthDID(Optimize, Plot):
         self.hat_omega_ElasticNet = None
         self.hat_omega_Lasso = None
         self.hat_omega_Ridge = None
+        self.sdid_se = None
+        self.sc_se = None
+        self.did_se = None
 
     def _divide_data(self):
 
@@ -61,7 +66,7 @@ class SynthDID(Optimize, Plot):
         additional_y=pd.DataFrame(),
     ):
 
-        self.base_zeta = self.est_zeta()
+        self.base_zeta = self.est_zeta(self.Y_pre_c)
 
         if zeta_type == "base":
             self.zeta = self.base_zeta
@@ -88,7 +93,7 @@ class SynthDID(Optimize, Plot):
         self.hat_omega_ADH = self.est_omega_ADH(
             additional_X=additional_X, additional_y=additional_y
         )
-        self.hat_lambda = self.est_lambda()
+        self.hat_lambda = self.est_lambda(self.Y_pre_c, self.Y_post_c)
 
         if sparce_estimation:
             self.hat_omega_ElasticNet = self.est_omega_ElasticNet(
@@ -256,15 +261,6 @@ class SynthDID(Optimize, Plot):
 
         if model == "sdid":
             result["sdid"] = self.sdid_trajectory()
-            time_result = pd.DataFrame(
-                {
-                    "time": self.Y_pre_c.index,
-                    "sdid_weight": np.round(self.hat_lambda, 3),
-                }
-            )
-
-            pre_point = self.Y_pre_c.index @ self.hat_lambda
-            post_point = np.mean(self.Y_post_c.index)
 
             pre_sdid = result["sdid"].head(len(self.hat_lambda)) @ self.hat_lambda
             post_sdid = result.loc[self.post_term[0] :, "sdid"].mean()
@@ -295,6 +291,16 @@ class SynthDID(Optimize, Plot):
             )
 
         return post_actural_treat - counterfuctual_post_treat
+
+    def cal_se(self, model="sdid", algo="placebo", replications=200):
+        if model == "sdid":
+            _var = self.estimate_variance(
+                    model=model, algo=algo, replications=replications
+                )
+            
+            self.sdid_se = np.sqrt(_var)
+        else:
+            print(f"{model} is not supported yet")
 
 
 if __name__ == "__main__":

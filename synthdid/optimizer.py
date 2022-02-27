@@ -10,9 +10,9 @@ from bayes_opt import BayesianOptimization
 
 
 class Optimize(object):
-    def est_zeta(self):
+    def est_zeta(self, Y_pre_c):
         return (self.n_treat * self.n_post_term) ** (1 / 4) * np.std(
-            self.Y_pre_c.diff().dropna().values
+            Y_pre_c.diff().dropna().values
         )
 
     def l2_loss(self, W, X, y, zeta, nrow) -> float:
@@ -64,7 +64,6 @@ class Optimize(object):
         else:
             return _caled_w
 
-
     def estimate_v(self, additional_X, additional_y):
         _len = len(additional_X)
         _v = np.repeat(1 / _len, _len)
@@ -108,9 +107,7 @@ class Optimize(object):
 
         return caled_w
 
-    def est_omega_ADH(
-        self, additional_X=pd.DataFrame(), additional_y=pd.DataFrame()
-    ):
+    def est_omega_ADH(self, additional_X=pd.DataFrame(), additional_y=pd.DataFrame()):
         Y_pre_t = self.Y_pre_t.copy()
 
         n_features = self.Y_pre_c.shape[1]
@@ -156,9 +153,9 @@ class Optimize(object):
 
             return self._v_loss(self.caled_v, X=add_X, y=add_y, return_loss=False)
 
-    def est_lambda(self):
-        Y_pre_c_T = self.Y_pre_c.T
-        Y_post_c_T = self.Y_post_c.T
+    def est_lambda(self, Y_pre_c, Y_post_c):
+        Y_pre_c_T = Y_pre_c.T
+        Y_post_c_T = Y_post_c.T
 
         n_pre_term = Y_pre_c_T.shape[1]
 

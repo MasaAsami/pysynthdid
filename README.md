@@ -12,7 +12,6 @@ https://github.com/synth-inference/synthdid
 This package is still under development. We will create `setup.py` after the following specifications are met.
   - Refactoring and better documentation
   - Completion of the TEST code
-  - Calculation of SE code(Bootstrap Variance Estimation, Jackknife Variance Estimation)
 
 ## How to use:
 ### Here's a simple example :
@@ -52,5 +51,3 @@ sdid.plot(model="sdid")
 
 ## Warning:
 - This module is still under development. 
-- Please check the logic carefully before using this. (Some optimization algorithms have been simplified.)
-

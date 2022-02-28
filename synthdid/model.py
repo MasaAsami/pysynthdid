@@ -91,7 +91,10 @@ class SynthDID(Optimize, Plot, Variance, Summary):
 
         self.hat_omega = self.est_omega(self.Y_pre_c, self.Y_pre_t, self.zeta)
         self.hat_omega_ADH = self.est_omega_ADH(
-            additional_X=additional_X, additional_y=additional_y
+            self.Y_pre_c,
+            self.Y_pre_t,
+            additional_X=additional_X,
+            additional_y=additional_y,
         )
         self.hat_lambda = self.est_lambda(self.Y_pre_c, self.Y_post_c)
 
@@ -292,15 +295,15 @@ class SynthDID(Optimize, Plot, Variance, Summary):
 
         return post_actural_treat - counterfuctual_post_treat
 
-    def cal_se(self, model="sdid", algo="placebo", replications=200):
-        if model == "sdid":
-            _var = self.estimate_variance(
-                    model=model, algo=algo, replications=replications
-                )
-            
-            self.sdid_se = np.sqrt(_var)
-        else:
-            print(f"{model} is not supported yet")
+    def cal_se(self, algo="placebo", replications=200):
+
+        sdid_var, sc_var, did_var = self.estimate_variance(
+            algo=algo, replications=replications
+        )
+
+        self.sdid_se = np.sqrt(sdid_var)
+        self.sc_se = np.sqrt(sc_var)
+        self.did_se = np.sqrt(did_var)
 
 
 if __name__ == "__main__":

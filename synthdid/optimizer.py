@@ -107,11 +107,13 @@ class Optimize(object):
 
         return caled_w
 
-    def est_omega_ADH(self, additional_X=pd.DataFrame(), additional_y=pd.DataFrame()):
-        Y_pre_t = self.Y_pre_t.copy()
+    def est_omega_ADH(
+        self, Y_pre_c, Y_pre_t, additional_X=pd.DataFrame(), additional_y=pd.DataFrame()
+    ):
+        Y_pre_t = Y_pre_t.copy()
 
-        n_features = self.Y_pre_c.shape[1]
-        nrow = self.Y_pre_c.shape[0]
+        n_features = Y_pre_c.shape[1]
+        nrow = Y_pre_c.shape[0]
 
         _w = np.repeat(1 / n_features, n_features)
 
@@ -123,7 +125,7 @@ class Optimize(object):
 
         if len(additional_X) == 0:
             caled_w = fmin_slsqp(
-                partial(self.rmse_loss, X=self.Y_pre_c, y=Y_pre_t, intersept=False),
+                partial(self.rmse_loss, X=Y_pre_c, y=Y_pre_t, intersept=False),
                 _w,
                 f_eqcons=lambda x: np.sum(x) - 1,
                 bounds=w_bnds,
@@ -132,7 +134,7 @@ class Optimize(object):
 
             return caled_w
         else:
-            assert additional_X.shape[1] == self.Y_pre_c.shape[1]
+            assert additional_X.shape[1] == Y_pre_c.shape[1]
             if type(additional_y) == pd.core.frame.DataFrame:
                 additional_y = additional_y.mean(axis=1)
 
@@ -146,7 +148,7 @@ class Optimize(object):
             ss_X = ss_df.iloc[:, :-1]
             ss_y = ss_df.iloc[:, -1]
 
-            add_X = pd.concat([self.Y_pre_c, ss_X])
+            add_X = pd.concat([Y_pre_c, ss_X])
             add_y = pd.concat([Y_pre_t, ss_y])
 
             self.caled_v = self.estimate_v(additional_X=add_X, additional_y=add_y)

@@ -62,7 +62,7 @@ class Plot(object):
             )
 
             ax.axvline(
-                x=self.pre_term[1],
+                x=(self.pre_term[1] + self.post_term[0]) * 0.5,
                 linewidth=1,
                 linestyle="dashed",
                 color="black",
@@ -112,14 +112,14 @@ class Plot(object):
             )
 
             ax.axvline(
-                x=self.pre_term[1],
+                x=(self.pre_term[1] + self.post_term[0]) * 0.5,
                 linewidth=1,
                 linestyle="dashed",
                 color="black",
                 alpha=0.3,
             )
             ax.set_title(
-                f"Synthetic Control Methods : tau {round( post_actural_treat - counterfuctual_post_treat,4)}"
+                f"Synthetic Control Method : tau {round( post_actural_treat - counterfuctual_post_treat,4)}"
             )
             ax.legend()
             plt.show()
@@ -177,7 +177,7 @@ class Plot(object):
             )
 
             ax.axvline(
-                x=self.pre_term[1],
+                x=(self.pre_term[1] + self.post_term[0]) * 0.5,
                 linewidth=1,
                 linestyle="dashed",
                 color="black",

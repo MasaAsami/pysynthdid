@@ -9,7 +9,16 @@ from synthdid.summary import Summary
 
 class SynthDID(Optimize, Plot, Variance, Summary):
     """
-    hogehoge
+    Synthetic Difference in Differences
+    df              : pandas.DataFrame
+    pre_term        : term before treatment
+    post_term       : term after treatmetn
+    treatment_unit  : treatment columns names list
+
+    [example]
+    df = fetch_CaliforniaSmoking()
+    sdid = SynthDID(df, [1970, 1979], [1980, 1988], ["California"])
+    sdid.fit()
     """
 
     def __init__(
@@ -316,11 +325,5 @@ if __name__ == "__main__":
     TREATMENT = ["California"]
 
     sdid = SynthDID(df, PRE_TEREM, POST_TEREM, TREATMENT)
-    sdid.base_zeta
-    sdid.fit(zeta_type="base")
-    print(sdid.base_zeta)
-    print(sdid.zeta)
-    sdid.fit(zeta_type="grid_search")
-    print(sdid.zeta)
-    sdid.fit(zeta_type="bayesian_opt")
-    print(sdid.zeta)
+    sdid.fit()
+    sdid.plot(model="sdid")

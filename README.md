@@ -6,10 +6,10 @@ Arkhangelsky, Dmitry, et al. Synthetic difference in differences. No. w25532. Na
 ### R pkg:
 https://github.com/synth-inference/synthdid
 
-<img src="fig/sc.png" width="500"/>
-<img src="fig/sdid.png" width="500"/>
-<img src="fig/sdid2.png" width="500"/>
-<img src="fig/sdid3.png" width="500"/>
+<img src="fig/sc.png" width="700"/>
+<img src="fig/sdid.png" width="700"/>
+<img src="fig/sdid2.png" width="700"/>
+<img src="fig/sdid3.png" width="700"/>
 
 ## Installation
 This package is still under development. We will create `setup.py` after the following specifications are met.
@@ -39,7 +39,7 @@ sdid.plot(model="sdid")
 <img src="fig/sdid_plot.png" width="700"/>
 
 - Details of each method will be created later.
-### See the jupyter notebook in [`notebook`](https://github.com/MasaAsami/pysynthdid/tree/main/notebook) for basic usage
+### See the jupyter [`notebook`](https://github.com/MasaAsami/pysynthdid/tree/main/notebook) for basic usage
 - `ReproductionExperiment_CaliforniaSmoking.ipynb`
   - This is a reproduction experiment note of the original paper, using a famous dataset (CaliforniaSmoking).
 

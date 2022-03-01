@@ -1,12 +1,15 @@
 # pysynthdid : Synthetic difference in differences for Python
 
 ## What is Synthetic difference in differences:
-(TBD) Will be described soon.
-
 ### original paper:
 Arkhangelsky, Dmitry, et al. Synthetic difference in differences. No. w25532. National Bureau of Economic Research, 2019. https://www.nber.org/papers/w25532
 ### R pkg:
 https://github.com/synth-inference/synthdid
+
+<img src="fig/sc.png" width="500"/>
+<img src="fig/sdid.png" width="500"/>
+<img src="fig/sdid2.png" width="500"/>
+<img src="fig/sdid3.png" width="500"/>
 
 ## Installation
 This package is still under development. We will create `setup.py` after the following specifications are met.
@@ -33,8 +36,7 @@ sdid = SynthDID(df, PRE_TEREM, POST_TEREM, TREATMENT)
 sdid.fit(zeta_type="base")
 sdid.plot(model="sdid")
 ```
-
-![image](https://user-images.githubusercontent.com/16971400/155323335-5f0beca9-b2a7-4a5d-8896-b62778478cd9.png)
+<img src="fig/sdid_plot.png" width="700"/>
 
 - Details of each method will be created later.
 ### See the jupyter notebook in [`notebook`](https://github.com/MasaAsami/pysynthdid/tree/main/notebook) for basic usage
@@ -51,3 +53,4 @@ sdid.plot(model="sdid")
 
 ## Warning:
 - This module is still under development. 
+- If you have any questions or comments, please feel free to use issues.

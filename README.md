@@ -11,7 +11,10 @@ https://github.com/synth-inference/synthdid
 <img src="fig/sdid2.png" width="700"/>
 <img src="fig/sdid3.png" width="700"/>
 
-## Installation
+### Blog:
+https://medium.com/@masa_asami/causal-inference-using-synthetic-difference-in-differences-with-python-5758e5a76909
+
+## Installation:
 This package is still under development. We will create `setup.py` after the following specifications are met.
   - Refactoring and better documentation
   - Completion of the TEST code

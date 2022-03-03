@@ -54,6 +54,6 @@ sdid.plot(model="sdid")
   - Adding donor pools with extremely different scales (e.g., 10x) can have a significant impact (bias) on the estimates. 
   - If different scales are mixed, as is usually the case in traditional regression, preprocessing such as logarithmic transformation is likely to be necessary
 
-## Warning:
+## Discussions and PR:
 - This module is still under development. 
 - If you have any questions or comments, please feel free to use issues.

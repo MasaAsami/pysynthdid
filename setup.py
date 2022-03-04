@@ -78,3 +78,4 @@ setup(
     },
     python_requires='>=3',
     test_suite='tests'
+)

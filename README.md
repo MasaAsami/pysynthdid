@@ -15,7 +15,12 @@ https://github.com/synth-inference/synthdid
 https://medium.com/@masa_asami/causal-inference-using-synthetic-difference-in-differences-with-python-5758e5a76909
 
 ## Installation:
-This package is still under development. We will create `setup.py` after the following specifications are met.
+
+```
+$ pip install git+https://github.com/MasaAsami/pysynthdid
+```
+
+This package is still under development. I plan to register with `pypi` after the following specifications are met.
   - Refactoring and better documentation
   - Completion of the TEST code
 
